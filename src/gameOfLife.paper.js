@@ -50,9 +50,10 @@ function createToolBar(toolBarOrigin, toolBarSize) {
 
   randomizeButton.fillColor = "purple";
   randomizeButton.onMouseDown = function() {
-    gameBoard = createBoard(boardHeight, boardWidth, LIVE_RECT_LENGTH);
+    randomizeBoard(gameBoard);
   };
 }
+
 function createBoard(boardHeight, boardWidth, rectSize) {
   var board = [];
   for (var r = 0; r < boardHeight; r++) {
@@ -75,11 +76,27 @@ function createBoard(boardHeight, boardWidth, rectSize) {
       rect.onMouseEnter = onMouseEnterRect;
       rect.onMouseLeave = onMouseLeaveRect;
       rect.onFrame = onFrameRect;
+      rect.onMouseDown = onMouseDownRect;
       row.push(rect);
     }
     board.push(row);
   }
   return board;
+}
+
+function randomizeBoard(board) {
+  if (!board || board.length == 0) {
+    return board;
+  }
+  var height = board.length;
+  var width = board[0].length;
+  for (var r = 0; r < height; r++) {
+    for (var c = 0; c < width; c++) {
+      if (Math.random() > 0.5) {
+        toggleRectAlive(board[r][c]);
+      }
+    }
+  }
 }
 
 function onMouseEnterRect() {
@@ -112,6 +129,21 @@ function onFrameRect() {
     var rotateAngle = this.rotation - 7 >= 0 ? -5 : -1 * this.rotation;
     this.rotate(rotateAngle);
   }
+}
+
+function toggleRectAlive(rect) {
+  rect.isAlive = !rect.isAlive;
+  // this code should belong elsewhere
+  // if possible rect.isAlive should control the color
+  if (rect.isAlive) {
+    rect.fillColor = getRandomColor();
+  } else {
+    rect.fillColor = DEAD_COLOR;
+  }
+}
+
+function onMouseDownRect() {
+  toggleRectAlive(this);
 }
 
 function stepBoard(board) {
@@ -156,13 +188,9 @@ function stepBoard(board) {
       var isCurrentlyAlive = currentRect.isAlive;
       var isNextStepAlive = nextIsAliveBoard[r][c];
 
-      if (!isCurrentlyAlive && isNextStepAlive) {
-        currentRect.fillColor = getRandomColor();
+      if (isCurrentlyAlive ^ isNextStepAlive) {
+        toggleRectAlive(currentRect);
       }
-      if (isCurrentlyAlive && !isNextStepAlive) {
-        currentRect.fillColor = DEAD_COLOR;
-      }
-      currentRect.isAlive = isNextStepAlive;
     }
   }
 }
