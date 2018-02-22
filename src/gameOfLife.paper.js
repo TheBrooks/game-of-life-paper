@@ -1,53 +1,76 @@
 // Create a circle shaped path with its center at the center
 // of the view and a radius of 30:
 
-function onResize(event) {
-  // Whenever the window is resized, recenter the path:
-  path.position = view.center;
-}
-
-var LIFE_SQUARE_LENGTH = 50;
+var LIVE_RECT_LENGTH = 50;
 var DEAD_COLOR = "white";
+var MAX_HOVER_RECT_LENGTH = 70;
 
-var height = Math.floor(view.size.height / LIFE_SQUARE_LENGTH);
-var width = Math.floor(view.size.width / LIFE_SQUARE_LENGTH);
-console.log(width);
-var board = [];
-for (var c = 0; c < height; c++) {
-  var row = [];
-  for (var r = 0; r < width; r++) {
-    var rect = new Path.Rectangle(
-      r * LIFE_SQUARE_LENGTH,
-      c * LIFE_SQUARE_LENGTH,
-      LIFE_SQUARE_LENGTH,
-      LIFE_SQUARE_LENGTH
-    );
-    var alive = Math.random() > 0.5;
-    var hue = Math.floor(Math.random() * 255);
-    var color = getRandomColor();
+var boardHeight = Math.floor(view.size.height / LIVE_RECT_LENGTH);
+var boardWidth = Math.floor(view.size.width / LIVE_RECT_LENGTH);
 
-    if (!alive) {
-      color = DEAD_COLOR;
+var gameBoard = createBoard(boardHeight, boardWidth, LIVE_RECT_LENGTH);
+setInterval(stepBoard.bind(null, gameBoard), 300);
+
+function createBoard(boardHeight, boardWidth, rectSize) {
+  var board = [];
+  for (var r = 0; r < boardHeight; r++) {
+    var row = [];
+    for (var c = 0; c < boardWidth; c++) {
+      var rect = new Path.Rectangle(
+        c * rectSize,
+        r * rectSize,
+        rectSize,
+        rectSize
+      );
+      var isAlive = Math.random() > 0.5;
+      var color = isAlive ? getRandomColor() : DEAD_COLOR;
+
+      rect.fillColor = color;
+      rect.strokeColor = "black";
+      rect.isAlive = isAlive;
+
+      rect.onMouseEnter = onMouseEnterRect;
+      rect.onMouseLeave = onMouseLeaveRect;
+      rect.onFrame = onFrameRect;
+      row.push(rect);
     }
-    rect.fillColor = color;
-    rect.strokeColor = "black";
-    rect.isAlive = alive;
-
-    rect.onMouseEnter = function() {
-      this.scale(2);
-      this.bringToFront();
-    };
-    rect.onMouseLeave = function() {
-      this.scale(0.5);
-    };
-    row.push(rect);
+    board.push(row);
   }
-  board.push(row);
+  return board;
 }
-console.log(board[0][0].fillColor);
-console.log(height);
 
-function stepBoard() {
+function onMouseEnterRect() {
+  this.isHovered = true;
+  this.bringToFront();
+}
+
+function onMouseLeaveRect() {
+  this.isHovered = false;
+}
+
+function onFrameRect() {
+  var INC_SPEED = 3;
+  var DEC_SPEED = 1.5;
+  if (this.isHovered && this.bounds.width < MAX_HOVER_RECT_LENGTH) {
+    var center = this.bounds.center;
+    this.bounds.width += INC_SPEED;
+    this.bounds.height += INC_SPEED;
+    this.bounds.center = center;
+  } else if (!this.isHovered && this.bounds.width > LIVE_RECT_LENGTH) {
+    var center = this.bounds.center;
+    this.bounds.width = Math.max(
+      this.bounds.width - DEC_SPEED,
+      LIVE_RECT_LENGTH
+    );
+    this.bounds.height = Math.max(
+      this.bounds.height - DEC_SPEED,
+      LIVE_RECT_LENGTH
+    );
+    this.bounds.center = center;
+  }
+}
+
+function stepBoard(board) {
   if (!board || board.length == 0) {
     return board;
   }
@@ -132,6 +155,7 @@ function mod(n, m) {
   return (n % m + m) % m;
 }
 
-//need to set a prototype function on rectangle class so that isAlive changes the fill color
-
-setInterval(stepBoard, 300);
+function onResize(event) {
+  // Whenever the window is resized, recenter the path:
+  console.log(event);
+}
