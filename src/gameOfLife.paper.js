@@ -4,19 +4,61 @@
 var LIVE_RECT_LENGTH = 50;
 var DEAD_COLOR = "white";
 var MAX_HOVER_RECT_LENGTH = 70;
+var TOOL_BAR_HEIGHT = 50;
 
-var boardHeight = Math.floor(view.size.height / LIVE_RECT_LENGTH);
+var boardHeight = Math.floor(
+  (view.size.height - TOOL_BAR_HEIGHT) / LIVE_RECT_LENGTH
+);
 var boardWidth = Math.floor(view.size.width / LIVE_RECT_LENGTH);
 
 var gameBoard = createBoard(boardHeight, boardWidth, LIVE_RECT_LENGTH);
-setInterval(stepBoard.bind(null, gameBoard), 300);
+var toolBarOrigin = new Point(0, boardHeight * LIVE_RECT_LENGTH);
+var toolBarSize = new Size(view.size.width, TOOL_BAR_HEIGHT);
+var toolBar = createToolBar(toolBarOrigin, toolBarSize);
 
+function createToolBar(toolBarOrigin, toolBarSize) {
+  var startButton = Shape.Rectangle(
+    toolBarOrigin.x,
+    toolBarOrigin.y,
+    toolBarSize.width / 3,
+    toolBarSize.height
+  );
+  startButton.fillColor = "green";
+  var interval;
+  startButton.onMouseDown = function() {
+    interval = setInterval(stepBoard.bind(null, gameBoard), 300);
+  };
+
+  var pauseButton = Shape.Rectangle(
+    toolBarOrigin.x + toolBarSize.width / 3,
+    toolBarOrigin.y,
+    toolBarSize.width / 3,
+    toolBarSize.height
+  );
+
+  pauseButton.fillColor = "red";
+  pauseButton.onMouseDown = function() {
+    clearInterval(interval);
+  };
+
+  var randomizeButton = Shape.Rectangle(
+    toolBarOrigin.x + 2 * toolBarSize.width / 3,
+    toolBarOrigin.y,
+    toolBarSize.width / 3,
+    toolBarSize.height
+  );
+
+  randomizeButton.fillColor = "purple";
+  randomizeButton.onMouseDown = function() {
+    gameBoard = createBoard(boardHeight, boardWidth, LIVE_RECT_LENGTH);
+  };
+}
 function createBoard(boardHeight, boardWidth, rectSize) {
   var board = [];
   for (var r = 0; r < boardHeight; r++) {
     var row = [];
     for (var c = 0; c < boardWidth; c++) {
-      var rect = new Path.Rectangle(
+      var rect = new Shape.Rectangle(
         c * rectSize,
         r * rectSize,
         rectSize,
@@ -28,6 +70,7 @@ function createBoard(boardHeight, boardWidth, rectSize) {
       rect.fillColor = color;
       rect.strokeColor = "black";
       rect.isAlive = isAlive;
+      rect.applyMatrix = false;
 
       rect.onMouseEnter = onMouseEnterRect;
       rect.onMouseLeave = onMouseLeaveRect;
@@ -51,22 +94,23 @@ function onMouseLeaveRect() {
 function onFrameRect() {
   var INC_SPEED = 3;
   var DEC_SPEED = 1.5;
-  if (this.isHovered && this.bounds.width < MAX_HOVER_RECT_LENGTH) {
+  if (this.isHovered && this.size.width < MAX_HOVER_RECT_LENGTH) {
     var center = this.bounds.center;
-    this.bounds.width += INC_SPEED;
-    this.bounds.height += INC_SPEED;
+    this.size.width += INC_SPEED;
+    this.size.height += INC_SPEED;
     this.bounds.center = center;
-  } else if (!this.isHovered && this.bounds.width > LIVE_RECT_LENGTH) {
+  } else if (!this.isHovered && this.size.width > LIVE_RECT_LENGTH) {
     var center = this.bounds.center;
-    this.bounds.width = Math.max(
-      this.bounds.width - DEC_SPEED,
-      LIVE_RECT_LENGTH
-    );
-    this.bounds.height = Math.max(
-      this.bounds.height - DEC_SPEED,
-      LIVE_RECT_LENGTH
-    );
+    this.size.width = Math.max(this.size.width - DEC_SPEED, LIVE_RECT_LENGTH);
+    this.size.height = Math.max(this.size.height - DEC_SPEED, LIVE_RECT_LENGTH);
     this.bounds.center = center;
+  }
+
+  if (this.isHovered) {
+    this.rotate(4);
+  } else if (true || this.rotation != 0) {
+    var rotateAngle = this.rotation - 7 >= 0 ? -5 : -1 * this.rotation;
+    this.rotate(rotateAngle);
   }
 }
 
