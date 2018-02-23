@@ -1,9 +1,9 @@
 // Create a circle shaped path with its center at the center
 // of the view and a radius of 30:
 
-var LIVE_RECT_LENGTH = 50;
+var LIVE_RECT_LENGTH = 35;
 var DEAD_COLOR = "white";
-var MAX_HOVER_RECT_LENGTH = 70;
+var MAX_HOVER_RECT_LENGTH = LIVE_RECT_LENGTH * 1.5;
 var TOOL_BAR_HEIGHT = 50;
 
 var boardHeight = Math.floor(
@@ -26,7 +26,7 @@ function createToolBar(toolBarOrigin, toolBarSize) {
   startButton.fillColor = "green";
   var interval;
   startButton.onMouseDown = function() {
-    interval = setInterval(stepBoard.bind(null, gameBoard), 300);
+    interval = setInterval(stepBoard.bind(null, gameBoard), 333);
   };
 
   var pauseButton = Shape.Rectangle(
